@@ -1,3 +1,7 @@
+.PHONY: run
+run:
+	python manage.py runserver
+
 .PHONY: up
 up:
 	docker compose -f docker-compose.yml up -d
