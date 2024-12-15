@@ -6,6 +6,10 @@ run:
 up:
 	docker compose -f docker-compose.yml up -d
 
+.PHONY: upd
+upd:
+	docker compose -f docker-compose.yml up
+
 .PHONY: down
 down:
 	docker compose -f docker-compose.yml down

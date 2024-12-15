@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
-from src.config.base import settings
+from src.config.base import config
 from src.config.db import db_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = settings.DJANGO_SECRET
+SECRET_KEY = config.DJANGO_SECRET
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -63,7 +63,7 @@ MIDDLEWARE = [
 ]
 
 
-ROOT_URLCONF = "src.urls"
+ROOT_URLCONF = "src.core.urls"
 
 TEMPLATES = [
     {
@@ -81,7 +81,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "src.wsgi.application"
+WSGI_APPLICATION = "src.core.wsgi.application"
 
 
 # Database
@@ -153,9 +153,9 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-ACCESS_TOKEN_EXPIRE_MINUTES = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRES)
+ACCESS_TOKEN_EXPIRE_MINUTES = timedelta(minutes=config.ACCESS_TOKEN_EXPIRES)
 
-REFRESH_TOKEN_EXPIRE_DAYS = timedelta(days=settings.REFRESH_TOKEN_EXPIRES)
+REFRESH_TOKEN_EXPIRE_DAYS = timedelta(days=config.REFRESH_TOKEN_EXPIRES)
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -170,3 +170,6 @@ REST_AUTH = {
     "JWT_AUTH_REFRESH_COOKIE": "refresh_token",
     "TOKEN_MODEL": None,
 }
+
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True

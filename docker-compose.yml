@@ -1,7 +1,20 @@
 services:
+  web-app:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+      - .env
+    volumes:
+      - ./app:/usr/app/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
   db:
     image: postgres:16
-    container_name: uweather-db
+    hostname: database
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
@@ -11,8 +24,18 @@ services:
 
   redis:
     image: redis:7.4.0
-    ports:
-      - "6379:6379"
+
+  celery-worker:
+    build: .
+    hostname: worker-1
+    command: celery -A src.core worker --loglevel=info
+    volumes:
+      - ./app:/usr/app/
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
 
 volumes:
   data:
