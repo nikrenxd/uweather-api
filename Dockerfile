@@ -10,7 +10,7 @@ ENV UV_SYSTEM_PYTHON=1
 WORKDIR /usr/app/
 
 # install dependencies
-COPY ./pyproject.toml ./uv.lock /usr/app/
+COPY ./pyproject.toml ./uv.lock ./manage.py /usr/app/
 RUN uv pip install -r pyproject.toml
 
-COPY ./app/ /usr/app/
+COPY ./src/ /usr/app/src/
