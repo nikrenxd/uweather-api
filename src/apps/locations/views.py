@@ -8,42 +8,56 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from src.apps.locations.models import Location
-from src.apps.locations.serializers import LocationSerializer, LocationDataSerializer
+from src.apps.locations.serializers import (
+    LocationListSerializer,
+    LocationCreateSerializer,
+    LocationApiDataSerializer,
+)
 from src.config.base import config
 
 
 class LocationViewSet(GenericViewSet, CreateModelMixin):
     queryset = Location.objects.all()
-    serializer_class = LocationSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         qs = super().get_queryset()
-        return qs.filter(user=self.request.user)
+        return qs.filter(user=self.request.user).order_by("name")
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return LocationListSerializer
+        if self.action == "create":
+            return LocationCreateSerializer
+        if self.action == "search_locations":
+            return LocationApiDataSerializer
+
+        return super().get_serializer_class()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
+        paginated = self.paginate_queryset(queryset)
 
-        locations = []
         with Client() as client:
-            for location in queryset.all():
-                response = client.get(
+            locations = [
+                client.get(
                     config.EXTERNAL_API_URL,
                     params={
                         "lat": location.latitude,
                         "lon": location.longitude,
                         "appid": config.EXTERNAL_API_KEY,
                     },
-                )
-                locations.append(response.json())
+                ).json()
+                for location in paginated
+            ]
 
-        serializer = LocationDataSerializer(data=locations, many=True)
+        serializer = self.get_serializer(data=locations, many=True)
         serializer.is_valid(raise_exception=True)
 
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)
 
     @action(detail=False, methods=["GET"], url_path="weather")
     def search_locations(self, request: Request):

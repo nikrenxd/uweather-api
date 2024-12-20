@@ -3,14 +3,10 @@ from rest_framework import serializers
 from src.apps.locations.models import Location
 
 
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = (
-            "name",
-            "longitude",
-            "latitude",
-        )
+class LocationApiDataSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    longitude = serializers.FloatField()
+    latitude = serializers.FloatField()
 
     def to_internal_value(self, data):
         return_data = {
@@ -22,7 +18,21 @@ class LocationSerializer(serializers.ModelSerializer):
         return super().to_internal_value(return_data)
 
 
-class LocationDataSerializer(serializers.Serializer):
+class LocationCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = (
+            "name",
+            "longitude",
+            "latitude",
+        )
+
+    def create(self, validated_data):
+        location, _ = self.Meta.model.objects.get_or_create(**validated_data)
+        return location
+
+
+class LocationListSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     current_temperature = serializers.DecimalField(max_digits=5, decimal_places=2)
     min_temperature = serializers.DecimalField(max_digits=5, decimal_places=2)
