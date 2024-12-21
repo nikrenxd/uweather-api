@@ -18,6 +18,10 @@ down:
 logs:
 	docker compose -f docker-compose.yml logs -f app
 
+.PHONY: ps
+ps:
+	docker ps --format '{{ json .}}' | jq .
+
 .PHONY: app-bash
 app-bash:
 	docker compose -f docker-compose.yml exec app bash
