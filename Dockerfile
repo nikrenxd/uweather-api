@@ -7,10 +7,10 @@ ENV PYTHONUNBUFFERED 1
 # env variable for installing dependencies inside container
 ENV UV_SYSTEM_PYTHON=1
 
-WORKDIR /usr/app/
+WORKDIR /app/
 
 # install dependencies
-COPY ./pyproject.toml ./uv.lock /usr/app/
+COPY ./pyproject.toml ./uv.lock /app/
 RUN uv pip install -r pyproject.toml
 
-COPY . /usr/app/
+COPY . /app/

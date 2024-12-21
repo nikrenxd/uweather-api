@@ -5,8 +5,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./src:/usr/app/src/
-      - ./tests:/usr/app/tests/
+      - .:/app/
     ports:
       - "8000:8000"
     depends_on:
@@ -31,7 +30,7 @@ services:
     hostname: worker-1
     command: celery -A src.core worker --loglevel=info
     volumes:
-      - ./src:/usr/app/src/
+      - ./src/:/app/src/
     env_file:
       - .env
     depends_on:
