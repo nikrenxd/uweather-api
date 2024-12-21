@@ -11,7 +11,7 @@ from src.apps.locations.models import Location
 from src.apps.locations.serializers import (
     LocationListSerializer,
     LocationCreateSerializer,
-    LocationApiDataSerializer,
+    LocationSearchSerializer,
 )
 from src.config.base import config
 
@@ -30,7 +30,7 @@ class LocationViewSet(GenericViewSet, CreateModelMixin):
         if self.action == "create":
             return LocationCreateSerializer
         if self.action == "search_locations":
-            return LocationApiDataSerializer
+            return LocationSearchSerializer
 
         return super().get_serializer_class()
 
@@ -53,7 +53,6 @@ class LocationViewSet(GenericViewSet, CreateModelMixin):
                 ).json()
                 for location in paginated
             ]
-
         serializer = self.get_serializer(data=locations, many=True)
         serializer.is_valid(raise_exception=True)
 
@@ -71,10 +70,8 @@ class LocationViewSet(GenericViewSet, CreateModelMixin):
 
         if response.status_code == status.HTTP_200_OK:
             response_data = response.json()
-
             serializer = self.get_serializer(data=response_data)
             serializer.is_valid(raise_exception=True)
-
             return Response(data=serializer.data, status=status.HTTP_200_OK)
 
         return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)

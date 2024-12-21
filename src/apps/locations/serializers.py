@@ -3,19 +3,29 @@ from rest_framework import serializers
 from src.apps.locations.models import Location
 
 
-class LocationApiDataSerializer(serializers.Serializer):
+class CoordinatesSerializer(serializers.Serializer):
+    lat = serializers.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+    )
+    lon = serializers.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+    )
+
+
+class LocationSearchSerializer(serializers.Serializer):
     name = serializers.CharField()
-    longitude = serializers.FloatField()
-    latitude = serializers.FloatField()
+    coord = CoordinatesSerializer()
 
-    def to_internal_value(self, data):
-        return_data = {
-            "name": data["name"],
-            "longitude": data["coord"]["lon"],
-            "latitude": data["coord"]["lat"],
-        }
+    def to_representation(self, instance):
+        new_repr = super().to_representation(instance)
 
-        return super().to_internal_value(return_data)
+        coords_data = new_repr.pop("coord")
+        new_repr["latitude"] = coords_data["lat"]
+        new_repr["longitude"] = coords_data["lon"]
+
+        return new_repr
 
 
 class LocationCreateSerializer(serializers.ModelSerializer):
@@ -32,18 +42,22 @@ class LocationCreateSerializer(serializers.ModelSerializer):
         return location
 
 
+class TemperatureSerializer(serializers.Serializer):
+    temp = serializers.DecimalField(max_digits=5, decimal_places=2)
+    temp_min = serializers.DecimalField(max_digits=5, decimal_places=2)
+    temp_max = serializers.DecimalField(max_digits=5, decimal_places=2)
+
+
 class LocationListSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
-    current_temperature = serializers.DecimalField(max_digits=5, decimal_places=2)
-    min_temperature = serializers.DecimalField(max_digits=5, decimal_places=2)
-    max_temperature = serializers.DecimalField(max_digits=5, decimal_places=2)
+    main = TemperatureSerializer()
 
-    def to_internal_value(self, data):
-        return_data = {
-            "name": data["name"],
-            "current_temperature": data["main"]["temp"],
-            "min_temperature": data["main"]["temp_min"],
-            "max_temperature": data["main"]["temp_max"],
-        }
+    def to_representation(self, instance):
+        new_repr = super().to_representation(instance)
+        temperature_data = new_repr.pop("main")
 
-        return super().to_internal_value(return_data)
+        new_repr["current_temperature"] = temperature_data["temp"]
+        new_repr["min_temperature"] = temperature_data["temp_min"]
+        new_repr["max_temperature"] = temperature_data["temp_max"]
+
+        return new_repr
