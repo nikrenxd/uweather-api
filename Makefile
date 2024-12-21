@@ -2,13 +2,17 @@
 run:
 	python manage.py runserver
 
-.PHONY: up
-up:
+.PHONY: up-d
+up-d:
 	docker compose -f docker-compose.yml up -d
 
-.PHONY: upd
-upd:
+.PHONY: up
+up:
 	docker compose -f docker-compose.yml up
+
+.PHONY: up-build
+up-build:
+	docker compose -f docker-compose.yml up --build
 
 .PHONY: down
 down:
@@ -21,6 +25,7 @@ logs:
 .PHONY: ps
 ps:
 	docker ps --format '{{ json .}}' | jq .
+
 
 .PHONY: app-bash
 app-bash:

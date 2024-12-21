@@ -6,6 +6,7 @@ services:
       - .env
     volumes:
       - ./src:/usr/app/src/
+      - ./tests:/usr/app/tests/
     ports:
       - "8000:8000"
     depends_on:
