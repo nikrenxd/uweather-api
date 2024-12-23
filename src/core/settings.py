@@ -173,5 +173,36 @@ REST_AUTH = {
     "TOKEN_MODEL": None,
 }
 
-CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_BROKER_URL = config.CELERY_BROKER_URL
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {
+            "format": "{levelname} {asctime} {name} {module} {message}",
+            "style": "{",
+        },
+    },
+    "filters": {
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "filters": ["require_debug_true"],
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "loggers": {
+        "src.apps.locations": {
+            "level": "DEBUG",
+            "handlers": ["console"],
+            "propagate": False,
+        },
+    },
+}
