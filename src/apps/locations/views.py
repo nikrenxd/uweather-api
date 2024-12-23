@@ -1,4 +1,3 @@
-from httpx import Client
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin
@@ -13,7 +12,7 @@ from src.apps.locations.serializers import (
     LocationCreateSerializer,
     LocationSearchSerializer,
 )
-from src.config.base import config
+from src.apps.locations.services import LocationService
 
 
 class LocationViewSet(GenericViewSet, CreateModelMixin):
@@ -39,20 +38,10 @@ class LocationViewSet(GenericViewSet, CreateModelMixin):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        paginated = self.paginate_queryset(queryset)
+        paginated_qs = self.paginate_queryset(queryset)
 
-        with Client() as client:
-            locations = [
-                client.get(
-                    config.EXTERNAL_API_URL,
-                    params={
-                        "lat": location.latitude,
-                        "lon": location.longitude,
-                        "appid": config.EXTERNAL_API_KEY,
-                    },
-                ).json()
-                for location in paginated
-            ]
+        locations = LocationService.get_locations_list(paginated_qs)
+
         serializer = self.get_serializer(data=locations, many=True)
         serializer.is_valid(raise_exception=True)
 
@@ -62,16 +51,11 @@ class LocationViewSet(GenericViewSet, CreateModelMixin):
     def search_locations(self, request: Request):
         location = request.query_params["location"]
 
-        with Client() as client:
-            response = client.get(
-                config.EXTERNAL_API_URL,
-                params={"q": location, "appid": config.EXTERNAL_API_KEY},
-            )
+        response_data = LocationService.get_location_data(q=location)
+        if not response_data:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if response.status_code == status.HTTP_200_OK:
-            response_data = response.json()
-            serializer = self.get_serializer(data=response_data)
-            serializer.is_valid(raise_exception=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(data=response_data)
+        serializer.is_valid(raise_exception=True)
 
-        return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)

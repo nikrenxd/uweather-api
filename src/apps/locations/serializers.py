@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from src.apps.locations.models import Location
+from src.apps.locations.services import LocationService
 
 
 class CoordinatesSerializer(serializers.Serializer):
@@ -28,20 +29,6 @@ class LocationSearchSerializer(serializers.Serializer):
         return new_repr
 
 
-class LocationCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = (
-            "name",
-            "longitude",
-            "latitude",
-        )
-
-    def create(self, validated_data):
-        location, _ = self.Meta.model.objects.get_or_create(**validated_data)
-        return location
-
-
 class TemperatureSerializer(serializers.Serializer):
     temp = serializers.DecimalField(max_digits=5, decimal_places=2)
     temp_min = serializers.DecimalField(max_digits=5, decimal_places=2)
@@ -54,10 +41,28 @@ class LocationListSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         new_repr = super().to_representation(instance)
-        temperature_data = new_repr.pop("main")
 
+        temperature_data = new_repr.pop("main")
         new_repr["current_temperature"] = temperature_data["temp"]
         new_repr["min_temperature"] = temperature_data["temp_min"]
         new_repr["max_temperature"] = temperature_data["temp_max"]
 
         return new_repr
+
+
+class LocationCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = (
+            "name",
+            "longitude",
+            "latitude",
+        )
+
+    def create(self, validated_data):
+        location_model = self.Meta.model
+        location = LocationService.get_or_create_location(
+            location_model,
+            validated_data,
+        )
+        return location
