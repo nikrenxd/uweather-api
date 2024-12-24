@@ -1,5 +1,4 @@
 import logging
-from django.db.models import QuerySet
 from httpx import Client
 
 from src.apps.locations.models import Location
@@ -11,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class LocationService:
     @classmethod
-    def get_location_data(cls, **kwargs) -> dict:
+    def get_location_data(cls, **kwargs) -> dict | None:
         """Takes request parameters and return response from api call"""
 
         default_params = {"appid": config.EXTERNAL_API_KEY}
@@ -30,13 +29,13 @@ class LocationService:
         return response.json()
 
     @classmethod
-    def get_locations_list(cls, paginated_locations: QuerySet) -> list[dict]:
+    def get_locations_list(cls, paginated_locations: dict) -> list[dict]:
         """Return list of locations saved in DB"""
         logger.debug("Getting locations list")
         return [
             cls.get_location_data(
-                lat=location.latitude,
-                lon=location.longitude,
+                lat=location["latitude"],
+                lon=location["longitude"],
             )
             for location in paginated_locations
         ]

@@ -4,6 +4,40 @@ from src.apps.locations.models import Location
 from src.apps.locations.services import LocationService
 
 
+# class LocationSerializer(serializers.Serializer):
+#     id = serializers.IntegerField()
+#     longitude = serializers.DecimalField(max_digits=5, decimal_places=2)
+#     latitude = serializers.DecimalField(max_digits=5, decimal_places=2)
+
+
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = (
+            "name",
+            "longitude",
+            "latitude",
+        )
+
+
+class LocationCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = (
+            "name",
+            "longitude",
+            "latitude",
+        )
+
+    def create(self, validated_data):
+        location_model = self.Meta.model
+        location = LocationService.get_or_create_location(
+            location_model,
+            validated_data,
+        )
+        return location
+
+
 class CoordinatesSerializer(serializers.Serializer):
     lat = serializers.DecimalField(
         max_digits=9,
@@ -35,7 +69,7 @@ class TemperatureSerializer(serializers.Serializer):
     temp_max = serializers.DecimalField(max_digits=5, decimal_places=2)
 
 
-class LocationListSerializer(serializers.Serializer):
+class LocationUserDataSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     main = TemperatureSerializer()
 
@@ -48,21 +82,3 @@ class LocationListSerializer(serializers.Serializer):
         new_repr["max_temperature"] = temperature_data["temp_max"]
 
         return new_repr
-
-
-class LocationCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = (
-            "name",
-            "longitude",
-            "latitude",
-        )
-
-    def create(self, validated_data):
-        location_model = self.Meta.model
-        location = LocationService.get_or_create_location(
-            location_model,
-            validated_data,
-        )
-        return location
