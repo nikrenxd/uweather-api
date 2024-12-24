@@ -1,7 +1,8 @@
 from dj_rest_auth import views
 from dj_rest_auth.jwt_auth import get_refresh_view
+from django.conf import settings
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from rest_framework import routers
@@ -25,3 +26,6 @@ urlpatterns = [
 ]
 
 urlpatterns += router.urls
+
+if settings.DEBUG:
+    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]

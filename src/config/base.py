@@ -13,7 +13,5 @@ class Config(BaseConfig):
     ACCESS_TOKEN_EXPIRES: int
     REFRESH_TOKEN_EXPIRES: int
 
-    CELERY_BROKER_URL: str
-
 
 config = Config()

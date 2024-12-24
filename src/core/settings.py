@@ -15,6 +15,7 @@ from pathlib import Path
 
 from src.config.base import config
 from src.config.db import db_config
+from src.config.redis import redis_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "dj_rest_auth",
     "drf_spectacular",
+    "silk",
     # local
     "src.apps.users",
     "src.apps.locations",
@@ -54,6 +56,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "silk.middleware.SilkyMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -98,6 +101,12 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": redis_config.redis_url,
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -173,7 +182,8 @@ REST_AUTH = {
     "TOKEN_MODEL": None,
 }
 
-CELERY_BROKER_URL = config.CELERY_BROKER_URL
+CELERY_BROKER_URL = redis_config.redis_url
+CELERY_RESULT_BACKEND = redis_config.redis_url
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 LOGGING = {
