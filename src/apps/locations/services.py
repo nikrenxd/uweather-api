@@ -1,4 +1,5 @@
 import logging
+
 from httpx import Client
 
 from src.apps.locations.models import Location
@@ -32,13 +33,15 @@ class LocationService:
     def get_locations_list(cls, paginated_locations: dict) -> list[dict]:
         """Return list of locations saved in DB"""
         logger.debug("Getting locations list")
-        return [
+        locations = [
             cls.get_location_data(
                 lat=location["latitude"],
                 lon=location["longitude"],
             )
             for location in paginated_locations
         ]
+
+        return locations
 
     @classmethod
     def get_or_create_location(cls, model: type[Location], data: dict) -> Location:
