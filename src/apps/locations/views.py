@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -5,7 +7,7 @@ from django.views.decorators.vary import vary_on_headers
 
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import CreateModelMixin
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -21,7 +23,10 @@ from src.apps.locations.serializers import (
 from src.apps.locations.tasks import task_get_location, task_get_user_locations
 
 
-class LocationViewSet(GenericViewSet, CreateModelMixin):
+logger = logging.getLogger(__name__)
+
+
+class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
     queryset = Location.objects.all()
     permission_classes = (IsAuthenticated,)
 
@@ -42,8 +47,6 @@ class LocationViewSet(GenericViewSet, CreateModelMixin):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    @method_decorator(cache_page(10))
-    @method_decorator(vary_on_headers("Cookie"))
     def list(self, request: Request, *args, **kwargs) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
         paginated_data = self.paginate_queryset(queryset)
