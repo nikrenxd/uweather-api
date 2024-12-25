@@ -1,4 +1,3 @@
-from django.core.cache import cache
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -41,12 +40,12 @@ class LocationViewSet(GenericViewSet, CreateModelMixin):
         return super().get_serializer_class()
 
     def perform_create(self, serializer):
-        cache.delete(self.request.user.id)
         serializer.save(user=self.request.user)
 
+    @method_decorator(cache_page(10))
+    @method_decorator(vary_on_headers("Cookie"))
     def list(self, request: Request, *args, **kwargs) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
-
         paginated_data = self.paginate_queryset(queryset)
 
         location_serializer = self.get_serializer(paginated_data, many=True)
