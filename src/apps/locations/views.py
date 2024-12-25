@@ -1,5 +1,6 @@
 import logging
 
+from django.core.cache import cache
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -30,6 +31,9 @@ class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
     queryset = Location.objects.all()
     permission_classes = (IsAuthenticated,)
 
+    def get_cache_key(self):
+        return f"locations:{self.request.user.id}"
+
     def get_queryset(self) -> QuerySet:
         qs = super().get_queryset()
         return qs.filter(user=self.request.user).order_by("name")
@@ -49,18 +53,19 @@ class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
 
     def list(self, request: Request, *args, **kwargs) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
-        paginated_data = self.paginate_queryset(queryset)
 
-        location_serializer = self.get_serializer(paginated_data, many=True)
+        location_serializer = self.get_serializer(queryset, many=True)
         data = location_serializer.data
 
-        locations = task_get_user_locations.delay(data).get(timeout=1)
+        locations = cache.get(self.get_cache_key())
+        if not locations:
+            locations = task_get_user_locations.delay(data).get()
+            cache.set(self.get_cache_key(), locations, 60 * 3)
 
         serializer = LocationUserDataSerializer(data=locations, many=True)
         serializer.is_valid(raise_exception=True)
 
-        response_data = serializer.data
-        return self.get_paginated_response(response_data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @method_decorator(cache_page(60))
     @method_decorator(vary_on_headers("Cookie"))
