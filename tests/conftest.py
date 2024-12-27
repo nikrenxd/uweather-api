@@ -5,14 +5,15 @@ from rest_framework.test import APIClient
 
 
 @pytest.fixture(scope="session")
-def django_db_setup(django_db_setup, django_db_blocker):
-    with django_db_blocker.unblock():
-        # call_command("loaddata", "./tests/fixtures/users_fixture.json")
-        pass
-
-@pytest.fixture(scope="session")
 def user_credentials():
     return {"email": "user1@mail.com", "password": "1234"}
+
+
+@pytest.fixture(scope="session")
+def django_db_setup(django_db_setup, django_db_blocker):
+    with django_db_blocker.unblock():
+        call_command("loaddata", "./tests/fixtures/users.json")
+        call_command("loaddata", "./tests/fixtures/locations.json")
 
 
 @pytest.fixture(scope="function")
