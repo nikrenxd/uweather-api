@@ -1,0 +1,22 @@
+[
+   {
+      "model":"locations.location",
+      "pk":1,
+      "fields":{
+         "name":"New York",
+         "latitude":"40.714300",
+         "longitude":"-74.006000",
+         "user":1
+      }
+   },
+   {
+      "model":"locations.location",
+      "pk":2,
+      "fields":{
+         "name":"Washington",
+         "latitude":"47.500100",
+         "longitude":"-120.501500",
+         "user":1
+      }
+   }
+]

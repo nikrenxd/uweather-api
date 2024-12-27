@@ -1,0 +1,21 @@
+[
+   {
+      "model":"users.customuser",
+      "pk":1,
+      "fields":{
+         "password":"pbkdf2_sha256$870000$Hy4tTN4a0Sr2aHKdZBREwn$htL23YP1YI0+95q34oFGPsRzcz9dXxgvz60AsdOGu0Q=",
+         "last_login":"2024-12-25T10:04:23.873Z",
+         "is_superuser":false,
+         "email":"johndoe@example.com",
+         "is_staff":false,
+         "is_active":true,
+         "date_joined":"2024-11-20T16:27:52.764Z",
+         "groups":[
+
+         ],
+         "user_permissions":[
+
+         ]
+      }
+   }
+]
