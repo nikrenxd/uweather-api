@@ -30,7 +30,7 @@ class LocationService:
         return response.json()
 
     @classmethod
-    def get_locations_list(cls, paginated_locations: dict) -> list[dict]:
+    def get_locations_list(cls, locations_data: dict) -> list[dict]:
         """Return list of locations saved in DB"""
         logger.debug("Getting locations list")
         locations = [
@@ -38,7 +38,7 @@ class LocationService:
                 lat=location["latitude"],
                 lon=location["longitude"],
             )
-            for location in paginated_locations
+            for location in locations_data
         ]
 
         return locations
