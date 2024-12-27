@@ -4,12 +4,6 @@ from src.apps.locations.models import Location
 from src.apps.locations.services import LocationService
 
 
-# class LocationSerializer(serializers.Serializer):
-#     id = serializers.IntegerField()
-#     longitude = serializers.DecimalField(max_digits=5, decimal_places=2)
-#     latitude = serializers.DecimalField(max_digits=5, decimal_places=2)
-
-
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location

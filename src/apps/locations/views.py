@@ -31,7 +31,7 @@ class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
     queryset = Location.objects.all()
     permission_classes = (IsAuthenticated,)
 
-    def get_cache_key(self):
+    def get_cache_key(self) -> str:
         return f"locations:{self.request.user.id}"
 
     def get_queryset(self) -> QuerySet:
@@ -50,6 +50,13 @@ class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        logger.debug("perform_create deleting cache")
+        cache.delete(self.get_cache_key())
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        logger.debug("perform_destroy deleting cache")
+        cache.delete(self.get_cache_key())
 
     def list(self, request: Request, *args, **kwargs) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
@@ -59,8 +66,8 @@ class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
 
         locations = cache.get(self.get_cache_key())
         if not locations:
-            locations = task_get_user_locations.delay(data).get()
-            cache.set(self.get_cache_key(), locations, 60 * 3)
+            locations = task_get_user_locations.delay(data).get(timeout=5)
+            cache.set(self.get_cache_key(), locations, 60 * 5)
 
         serializer = LocationUserDataSerializer(data=locations, many=True)
         serializer.is_valid(raise_exception=True)
