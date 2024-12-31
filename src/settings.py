@@ -31,7 +31,7 @@ SECRET_KEY = config.DJANGO_SECRET
 DEBUG = bool(config.DEBUG)
 
 ALLOWED_HOSTS = config.ALLOWED_HOSTS.split(",")
-
+CSRF_TRUSTED_ORIGINS = config.CSRF_TRUSTED_ORIGINS.split(" ")
 
 # Application definition
 
@@ -144,7 +144,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-STATIC_ROOT = BASE_DIR / "static"
+STATIC_ROOT = BASE_DIR / "src/staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

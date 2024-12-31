@@ -1,19 +1,30 @@
 services:
   web-app:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn src.wsgi:application --bind 0.0.0.0:8000
     env_file:
       - .env
     volumes:
       - .:/app/
-    ports:
-      - "8000:8000"
+      - static:/app/src/staticfiles
+    expose:
+      - 8000
     depends_on:
       - db
       - redis
 
+  nginx:
+    build: ./docker/nginx-conf
+    volumes:
+      - ./nginx-conf/:/etc/nginx/conf.d/
+      - static_vol:/app/src/staticfiles
+    ports:
+      - "81:80"
+    depends_on:
+      - web-app
+
   db:
-    image: postgres:16
+    image: postgres:16-alpine3.21
     hostname: database
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -23,12 +34,12 @@ services:
       - data:/var/lib/postgresql/data
 
   redis:
-    image: redis:7.4.0
+    image: redis:7.4-alpine3.20
 
   celery-worker:
     build: .
     hostname: worker-1
-    command: celery -A src.core worker --loglevel=info
+    command: celery -A src worker --loglevel=info
     volumes:
       - ./src/:/app/src/
     env_file:
@@ -39,3 +50,4 @@ services:
 
 volumes:
   data:
+  static:
