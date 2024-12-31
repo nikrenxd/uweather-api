@@ -1,11 +1,10 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 
-class BaseConfig(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-
-
-class Config(BaseConfig):
+class Config(BaseSettings):
+    ALLOWED_HOSTS: str
+    DEBUG: int = Field(default=0)
     DJANGO_SECRET: str
     EXTERNAL_API_KEY: str
     EXTERNAL_API_URL: str

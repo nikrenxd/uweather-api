@@ -1,9 +1,8 @@
 from pydantic import Field
+from pydantic_settings import BaseSettings
 
-from src.config.base import BaseConfig
 
-
-class DatabaseConfig(BaseConfig):
+class DatabaseConfig(BaseSettings):
     DB_NAME: str = Field(default="postgres")
     DB_USER: str = Field(default="postgres")
     DB_HOST: str = Field(default="localhost")
