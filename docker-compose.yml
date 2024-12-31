@@ -14,7 +14,7 @@ services:
       - redis
 
   nginx:
-    build: ./docker/nginx-conf
+    image: nginx:1.27
     volumes:
       - ./nginx-conf/:/etc/nginx/conf.d/
       - static:/app/src/staticfiles
