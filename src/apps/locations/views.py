@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
+    serializer_class = LocationSerializer
     queryset = Location.objects.all()
     permission_classes = (IsAuthenticated,)
 
@@ -39,8 +40,6 @@ class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
         return qs.filter(user=self.request.user).order_by("name")
 
     def get_serializer_class(self):
-        if self.action == "list":
-            return LocationSerializer
         if self.action == "create":
             return LocationCreateSerializer
         if self.action == "search_locations":
