@@ -1,0 +1,73 @@
+services:
+  web-app:
+    build: .
+    command: gunicorn src.wsgi:application --bind 0.0.0.0:${APP_PORT}
+    env_file:
+      - .env.prod
+    volumes:
+      - static:/app/src/staticfiles
+    expose:
+      - ${APP_PORT}
+    depends_on:
+      - db
+      - redis
+
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: nginx-proxy
+    restart: always
+    volumes:
+      - static:/app/src/staticfiles
+      - certs:/etc/nginx/certs
+      - html:/usr/share/nginx/html
+      - /nginx-conf/vhost.d/:/etc/nginx/vhost.d/
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    ports:
+      - "${HTTPS_PORT}:443"
+      - "${HTTP_PORT}:80"
+    depends_on:
+      - web-app
+
+  acme-companion:
+    image: nginxproxy/acme-companion
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
+    depends_on:
+      - nginx-proxy
+
+  db:
+    image: postgres:16
+    hostname: database
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.4.0
+
+  celery-worker:
+    build: .
+    hostname: worker-1
+    command: celery -A src worker --loglevel=info
+    volumes:
+      - ./src/:/app/src/
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  data:
+  static:
+  certs:
+  html:
+  acme:
