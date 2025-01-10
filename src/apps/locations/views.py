@@ -1,6 +1,5 @@
 import logging
 
-from django.core.cache import cache
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -12,6 +11,7 @@ from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
 
 from src.apps.locations.models import Location
@@ -21,8 +21,8 @@ from src.apps.locations.serializers import (
     LocationSerializer,
     LocationUserDataSerializer,
 )
+from src.apps.locations.services import LocationService
 from src.apps.locations.tasks import task_get_location, task_get_user_locations
-
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +32,11 @@ class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
     queryset = Location.objects.all()
     permission_classes = (IsAuthenticated,)
 
-    def get_cache_key(self) -> str:
-        return f"locations:{self.request.user.id}"
-
     def get_queryset(self) -> QuerySet:
         qs = super().get_queryset()
         return qs.filter(user=self.request.user).order_by("name")
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> Serializer:
         if self.action == "create":
             return LocationCreateSerializer
         if self.action == "search_locations":
@@ -50,28 +47,32 @@ class LocationViewSet(GenericViewSet, CreateModelMixin, DestroyModelMixin):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
         logger.debug("perform_create deleting cache")
-        cache.delete(self.get_cache_key())
+        LocationService.delete_cache_on_change(self.request.user)
 
     def perform_destroy(self, instance):
         instance.delete()
         logger.debug("perform_destroy deleting cache")
-        cache.delete(self.get_cache_key())
+        LocationService.delete_cache_on_change(self.request.user)
 
     def list(self, request: Request, *args, **kwargs) -> Response:
-        queryset = self.filter_queryset(self.get_queryset())
+        page_number = request.query_params.get("page", 1)
+        user = request.user
 
-        location_serializer = self.get_serializer(queryset, many=True)
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+
+        location_serializer = self.get_serializer(page, many=True)
         data = location_serializer.data
 
-        locations = cache.get(self.get_cache_key())
+        locations = LocationService.get_cache(user, page_number)
         if not locations:
             locations = task_get_user_locations.delay(data).get(timeout=5)
-            cache.set(self.get_cache_key(), locations, 60 * 5)
+            LocationService.set_cache(user, locations, page_number, 180)
 
         serializer = LocationUserDataSerializer(data=locations, many=True)
         serializer.is_valid(raise_exception=True)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)
 
     @method_decorator(cache_page(60))
     @method_decorator(vary_on_headers("Cookie"))
