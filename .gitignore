@@ -1,6 +1,6 @@
-.env
+.env.dev
 .env.db
-.env.prod
+.env
 .venv
 .DS_Store
 __pycache__
